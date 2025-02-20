@@ -1,0 +1,9 @@
+[general]
+name=aGrae APP
+description=aGrae Agricultura de Precision, permite gestionar la informacion de cultivos asociados a la explotacion
+about=
+version=1.0
+qgisMinimumVersion=3.0
+author= aGrae 
+email= francisco.contreras@agrae.es , hector.ballesteros@agrae.es , jorge.minon@agrae.es
+repository=URL to the code repository

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/agrae_app" >
+        <file>gui/logo.png</file>
+    </qresource>
+</RCC>
