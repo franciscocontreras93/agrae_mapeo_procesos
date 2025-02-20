@@ -3,8 +3,6 @@ import tempfile
 import json
 import os
 
-from dotenv import load_dotenv
-
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import Qt
@@ -12,7 +10,7 @@ from qgis.utils import iface
 from qgis.core import *
 from qgis.PyQt.QtCore import  Qt,QVariant, QSettings, QSize,QDateTime,pyqtSignal
 
-load_dotenv('.env')
+
 
 
 
