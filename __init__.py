@@ -9,8 +9,8 @@
 # (at your option) any later version.
 #---------------------------------------------------------------------
 
-from PyQt5.QtWidgets import QAction, QMessageBox,QToolButton, QComboBox
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWidgets import QAction, QMessageBox,QToolButton, QComboBox, QLabel, QMenu
+from PyQt5.QtCore import QCoreApplication, QSize, Qt
 from PyQt5.QtGui import QIcon
 
 from qgis.core import QgsProject,QgsRasterLayer
@@ -19,6 +19,11 @@ from .db import connectionDriver
 from .dialogs import aGraeDialogs
 from .gui import aGraeGUI
 from .core.tools import aGraeTools,aGraeGISTools
+from .core.identify import selectTool
+
+
+import asyncio
+import aiohttp
 
 def classFactory(iface):
     return AgraeAPP(iface)
@@ -28,9 +33,9 @@ class AgraeAPP:
     def __init__(self, iface):
         self.iface = iface
         self.tools = aGraeTools()
-        self.menu = self.tr(u'&aGricultura de Precision | aGrae')
-        self.toolbar = self.iface.addToolBar(u'&aGricultura de Precision | aGrae')
-        self.toolbar.setObjectName(u'&aGricultura de Precision | aGrae')
+        self.menu = self.tr(u'&Mapeo Integral | aGrae')
+        self.toolbar = self.iface.addToolBar(u'&Mapeo Integral | aGrae')
+        self.toolbar.setObjectName(u'&Mapeo Integral | aGrae')
         
 
         self.actions = []
@@ -42,6 +47,8 @@ class AgraeAPP:
         self.campania_data  = {}
 
         self.sessionToken = None
+
+        self.identifyTool = None
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -145,30 +152,39 @@ class AgraeAPP:
         self.comboExplotacion.adjustSize()
         self.comboExplotacion.addItem('Seleccionar Explotacion...',0)
         self.comboExplotacion.setEnabled(False)
+        # self.comboExplotacion.resize(30,200)
+        self.comboExplotacion.setMinimumWidth(300)
+        
+        label_title_app = QLabel('Analíticas de Mapeo | Mapeo Integral | aGrae')
+        label_title_app.setStyleSheet("QLabel { background-color : red; color : white; font-weight: bold }")
+        self.toolbar.addWidget(label_title_app)
+        self.add_action(aGraeGUI().getIcon('login'),'Iniciar Sesion',self.login,add_to_menu=True,add_to_toolbar=True)
+        
         self.toolbar.addWidget(self.comboCampanias)
         self.toolbar.addWidget(self.comboExplotacion)
         
-        self.add_action(aGraeGUI().getIcon('login'),'Iniciar Sesion',self.login,add_to_menu=True,add_to_toolbar=True)
-
         self.business_inteligence_tool = QToolButton()
-        self.business_inteligence_tool.setToolTip('Intenligencia de Negocios | aGrae')
-        # self.action_add_lotes_layer = aGraeTools().getAction(parent=self,text='Cargar Lotes',callback=self.load_lotes_layer)
-        self.bi_actions.append(self.tools.getAction(parent=self,text='Cargar Lotes',callback=lambda: self.load_layer('/app/lotes/','Lotes',self.sessionToken)))
-        self.bi_actions.append(self.tools.getAction(parent=self,text='Cargar Segmentos',callback=lambda: self.load_layer('/app/segm/','Segmentos',self.sessionToken)))
-        self.bi_actions.append(self.tools.getAction(parent=self,text='Cargar Ambientes Productivos',callback=lambda: self.load_layer('/app/amb/','Ambientes',self.sessionToken)))
-        self.bi_actions.append(self.tools.getAction(parent=self,text='Cargar Unid. Fertilziacion',callback=lambda: self.load_layer('/app/uf/','Und. Fertilizacion',self.sessionToken)))
-        self.bi_actions.append(self.tools.getAction(parent=self,text='Cargar Recintos Parcelarios',callback=lambda: aGraeGISTools().load_wms_toc(self.sessionToken,'Parcelas Catastro','Recintos Parcelarios')))
+        self.business_inteligence_tool.setToolTip('Analíticas de Mapeo | aGrae')
+        self.bi_actions.append(self.tools.getAction(parent=self,text='Gestionar Usuarios',callback=lambda: aGraeDialogs().usersDialog(self.sessionToken,self.comboExplotacion.currentData(),self.comboExplotacion.currentText())))
+        self.bi_actions.append(self.tools.getAction(parent=self,text='Gestionar Almacenamiento',callback=lambda: aGraeDialogs().diskSpaceDialog(self.sessionToken,self.comboCampanias.currentData(),self.comboExplotacion.currentData())))
+        self.bi_actions.append(aGraeTools().getAction(parent=self,text='Identificacion',callback=self.activate_identify))
+        # self.bi_actions.append(aGraeTools().getAction(parent=self,text='Generar Reportes',callback=self.activate_identify))
+        #* GENERAR REPORTES DE FERTILIZACION EN CSV, REPORTES DE ANALITICA EN CSV LOS REPORTES DEBEN SER UN SUBMENU
         self.add_toolbutton(self.business_inteligence_tool,self.bi_actions,aGraeGUI().getIcon('BI'))
         
         self.manager_business_tool = QToolButton()
-        self.manager_business_tool.setToolTip('Gestion de Negocios | aGrae')
-        self.mb_actions.append(self.tools.getAction(parent=self,text='Generar Reporte Excel'))
+        self.manager_business_tool.setToolTip('Mapeo de Procesos | aGrae')
+        # self.mb_actions.append(self.tools.getAction(parent=self,text='Generar Reporte Excel'))
+        # self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Analisis de Laboratorio'))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Lotes',callback=lambda: self.load_layer('/app/lotes/','Lotes',self.sessionToken,'lotes')))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Segmentos',callback=lambda: self.load_layer('/app/segm/','Segmentos',self.sessionToken,'segmentos')))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Ambientes Productivos',callback=lambda: self.load_layer('/app/amb/','Ambientes',self.sessionToken,'ambientes')))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Unid. Fertilización',callback=lambda: self.load_layer('/app/uf/','Und. Fertilizacion',self.sessionToken,'ufs')))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Recintos Parcelarios',callback=lambda: aGraeGISTools().load_wms_toc(self.sessionToken,'Parcelas Catastro','Recintos Parcelarios')))
+        self.mb_actions.append(self.tools.getAction(parent=self,text='Cargar Mapa Satelital',callback=lambda: aGraeGISTools().load_wms_toc(self.sessionToken,'PNOA Ortofoto','Ortofoto PNOA')))
         # self.add_action(aGraeGUI().getIcon('BI'),'Cargar Capas',self.run,add_to_menu=True,add_to_toolbar=True)
         self.add_toolbutton(self.manager_business_tool,self.mb_actions,aGraeGUI().getIcon('GN'))
 
-        
-
-        
 
         return 
         
@@ -210,14 +226,19 @@ class AgraeAPP:
                 self.comboExplotacion.addItem(e,i)
         return
 
-    def load_layer(self,endpoint,nombre,token):
+    def load_layer(self,endpoint,nombre,token,style):
         if self.sessionToken:
             idcampania = self.comboCampanias.currentData()
             idexplotacion = self.comboExplotacion.currentData()
-            QgsProject.instance().addMapLayer(aGraeGISTools().get_layer(endpoint,token,idcampania,idexplotacion,f'{self.comboCampanias.currentText()}-{self.comboExplotacion.currentText()}-{nombre}'))
+            QgsProject.instance().addMapLayer(aGraeGISTools().get_layer(endpoint,token,idcampania,idexplotacion,f'{self.comboCampanias.currentText()}-{self.comboExplotacion.currentText()}-{nombre}',style))
 
-    
-    def load_recintos_parcelarios(self):
-        aGraeGISTools().load_wms_toc('Parcelas Catastro','Recintos Parcelarios')
-        # QgsProject.instance().addMapLayer(layer)
 
+    def activate_identify(self):
+        active_layer = self.iface.activeLayer()
+        if active_layer is None:
+            print("No hay capa activa seleccionada.")
+            return
+        if self.identifyTool is None:
+            self.identifyTool = selectTool(active_layer,self.sessionToken) #Create the tool with the active layer.
+        #iface.setActiveLayer(active_layer) #set the correct active layer to tool
+        self.iface.mapCanvas().setMapTool(self.identifyTool)

@@ -14,6 +14,9 @@ from ..gui import aGraeGUI
 from ..core.tools import aGraeTools
 
 
+import asyncio
+import aiohttp
+
 
 class LoginForm(QDialog):
     idsExplotacionesSignal = pyqtSignal(dict)
@@ -23,7 +26,7 @@ class LoginForm(QDialog):
 
         self.initUI()
     def initUI(self):
-        self.setWindowTitle('aGrae APP | Inicio de Sesion')
+        self.setWindowTitle('Mapeo Integral | Inicio de Sesion')
         self.mainLayout = QVBoxLayout(self)
         self.mainLayout.setAlignment(Qt.AlignVCenter)
         self.mainLayout.setSpacing(50);
@@ -97,7 +100,7 @@ class LoginForm(QDialog):
             if response.status_code == 200:
                 token_data['nif'] = user
                 self.sessionTokenSignal.emit(token_data)
-                QMessageBox.information(self, 'aGricultura de Precision | aGrae', 'Sesion Iniciada.'.format())
+                QMessageBox.information(self, 'Mapeo Integral | aGrae', 'Sesion Iniciada.'.format())
                 self.close()
                 
                 # headers = {'Authorization': '{} {}'.format(token_data['token_type'],token_data['access_token'])}
