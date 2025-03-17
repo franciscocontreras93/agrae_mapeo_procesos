@@ -1,6 +1,6 @@
 [general]
-name=aGrae APP
-description=aGrae Agricultura de Precision, permite gestionar la informacion de cultivos asociados a la explotacion.
+name= aGrae | Mapeo Integral | Mapeo de Procesos
+description=aGrae Mapeo Integral, permite gestionar la informacion de cultivos asociados a la explotacion.
 about=Herramientas desarrolladas para la gestion de la informacion geoespacial, analisis de laboratorios y resumen de preescripciones.
 version=1.0
 qgisMinimumVersion=3.0
@@ -9,3 +9,4 @@ email= francisco.contreras@agrae.es | jorge.minon@agrae.es
 experimental= True
 repository=https://github.com/franciscocontreras93/agrae_app
 tracker=https://github.com/franciscocontreras93/agrae_app/issues
+icon=gui\icons\GN.svg

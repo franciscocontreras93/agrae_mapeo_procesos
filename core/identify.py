@@ -88,9 +88,9 @@ class selectTool(QgsMapToolIdentify):
         menu.addAction(print_attributes_action)
 
         # Example Action 2: Show Feature ID
-        show_feature_id_action = QAction("Mostrar ID", self)
-        show_feature_id_action.triggered.connect(self.show_feature_id)
-        menu.addAction(show_feature_id_action)
+        # show_feature_id_action = QAction("Mostrar ID", self)
+        # show_feature_id_action.triggered.connect(self.show_feature_id)
+        # menu.addAction(show_feature_id_action)
 
         # Add more actions here as needed...
 
