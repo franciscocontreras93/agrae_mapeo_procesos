@@ -38,7 +38,6 @@ class LoginForm(QDialog):
         self.logo.setScaledContents(True)
         self.line_user = QLineEdit()
         self.line_user.setPlaceholderText('Usuario')
-        self.line_user.setText('F34004150')
         self.line_user.setStyleSheet("""
         QLineEdit {
             width: 13em;
@@ -50,7 +49,6 @@ class LoginForm(QDialog):
         """)
         self.line_password = QgsPasswordLineEdit()
         self.line_password.setPlaceholderText('Contraseña')
-        self.line_password.setText('23826405')
         self.line_password.setStyleSheet("""
         QLineEdit {
             width: 13em;
