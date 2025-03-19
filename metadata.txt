@@ -2,7 +2,7 @@
 name= aGrae | Mapeo Integral | Mapeo de Procesos
 description=aGrae Mapeo Integral, permite gestionar la informacion de cultivos asociados a la explotacion.
 about=Herramientas desarrolladas para la gestion de la informacion geoespacial, analisis de laboratorios y resumen de preescripciones.
-version=1.0
+version=1.0.1
 qgisMinimumVersion=3.0
 author= aGrae 
 email= francisco.contreras@agrae.es | jorge.minon@agrae.es
